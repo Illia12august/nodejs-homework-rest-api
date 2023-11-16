@@ -1,22 +1,35 @@
-const fs = require("fs/promises");
+// const fs = require("fs/promises");
 const path = require("path");
-
+const Contact = require("../models/contact");
+const { ContactSchema, favoriteSchema } = require("../joi_schemas/joi_schemas");
 // const { nanoid } = require("nanoid");
 // Розкоментуй і запиши значення
 const contactsPath = path.join(__dirname, "contacts.json");
 console.log(contactsPath);
 // TODO: задокументувати кожну функцію
-async function listContacts() {
-  const data = await fs.readFile(contactsPath, "utf-8");
-  return JSON.parse(data);
+async function listContacts(req, res, next) {
+  try {
+    const contacts = await Contact.find().exec();
+    res.send(contacts);
+  } catch (error) {
+    next(error);
+  }
 }
 
-// async function getById(contactId) {
-//   const contacts = await listContacts();
-//   const result = contacts.find((item) => item.id === contactId);
-//   return result || null;
-//   // ...твій код. Повертає об'єкт контакту з таким id. Повертає null, якщо контакт з таким id не знайдений.
-// }
+async function getById(req, res, next) {
+  const { id } = req.params;
+
+  try {
+    const contact = await Contact.findById(id).exec();
+    if (contact === null) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+    res.send(contact);
+  } catch (error) {
+    next(error);
+  }
+  // ...твій код. Повертає об'єкт контакту з таким id. Повертає null, якщо контакт з таким id не знайдений.
+}
 
 // // 1 спосіб
 // // async function removeContact(contactId) {
@@ -32,48 +45,129 @@ async function listContacts() {
 // // }
 
 // // 2 спосіб
-// async function removeContact(contactId) {
-//   const contacts = await listContacts();
-//   const index = contacts.findIndex((item) => item.id === contactId);
-//   if (index === -1) {
-//     return null;
-//   }
-//   const [result] = contacts.splice(index, 1);
-//   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-//   return result || null
-// }
+async function removeContact(req, res, next) {
+  try {
+    const { id } = req.params;
 
-// async function addContact(name, email, phone) {
-//   const contacts = await listContacts();
-//   const newContact = {
-//     id: nanoid(),
-//     name,
-//     email,
-//     phone,
-//   };
-//   contacts.push(newContact);
-//   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2))
-//   return newContact;
-//   // ...твій код. Повертає об'єкт доданого контакту.
-// }
+    const deletedContact = await Contact.findByIdAndDelete(id);
+    console.log(deletedContact);
 
-// const updateContact = async (contactId, body) => {
-//   const contacts = await listContacts();
-//   const index = contacts.findIndex((item) => item.id === contactId);
-//   if (index === -1) {
-//     return null;
-//   }
-//   if (!body || Object.keys(body).length === 0) {
-//     return contacts[index];
-//   }
-//   contacts[index] = { ...contacts[index], ...body };
-//   await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-//   return contacts[index];
-// };
+    if (!deletedContact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    res.json({ message: "Contact deleted" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function addContact(req, res, next) {
+  try {
+    const { name, email, phone } = req.body;
+
+    const validation = ContactSchema.validate(req.body, { abortEarly: false });
+
+    if (validation.error) {
+      const errorMessage = validation.error.details
+        .map((error) => error.message)
+        .join(", ");
+      return res
+        .status(400)
+        .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const newContact = new Contact({
+      name,
+      email,
+      phone,
+    });
+
+    const savedContact = await newContact.save();
+
+    res.status(201).json(savedContact);
+  } catch (error) {
+    next(error);
+  }
+  // ...твій код. Повертає об'єкт доданого контакту.
+}
+
+const updateContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone } = req.body;
+
+    const validation = ContactSchema.validate(req.body, { abortEarly: false });
+
+    if (validation.error) {
+      const errorMessage = validation.error.details
+        .map((error) => error.message)
+        .join(", ");
+      return res
+        .status(400)
+        .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const updateContact = await Contact.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        phone,
+      },
+      { new: true }
+    );
+
+    if (!updateContact) {
+      return res.status(404).json({ message: "Contact not found" });
+    }
+
+    res.status(200).json(updateContact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+async function updateStatusContact(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { favorite } = req.body;
+
+    const favoriteValidation = favoriteSchema.validate(
+      { favorite },
+      { abortEarly: false }
+    );
+    if (favoriteValidation.error) {
+      const errorMessage = favoriteValidation.error.details
+        .map((error) => error.message)
+        .join(", ");
+      return res
+        .status(400)
+        .json({ message: `Validation Error: ${errorMessage}` });
+    }
+
+    const updatedContact = await Contact.findByIdAndUpdate(
+      id,
+      {
+        favorite,
+      },
+      { new: true }
+    );
+
+    if (updatedContact === null) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    res.status(200).json(updatedContact);
+  } catch (error) {
+    next(error);
+  }
+}
 module.exports = {
   listContacts,
-  //   getById,
-  //   removeContact,
-  //   addContact,
-  //   updateContact
+  getById,
+  removeContact,
+  addContact,
+  updateContact,
+  updateStatusContact,
 };
