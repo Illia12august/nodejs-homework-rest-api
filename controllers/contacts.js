@@ -96,7 +96,7 @@ const updateContact = async (req, res, next) => {
     const { id } = req.params;
     const { name, email, phone } = req.body;
 
-    const validation = contactSchema.validate(req.body, { abortEarly: false });
+    const validation = contactSchema.validate(req.body);
 
     if (validation.error) {
       const errorMessage = validation.error.details

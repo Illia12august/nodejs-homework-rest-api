@@ -7,17 +7,18 @@ const {
   updateContact,
   updateStatusContact,
 } = require("../../controllers/contacts");
+const isValidId = require("../../models/isValidId");
 
 const router = express.Router();
 const jsonParser = express.json();
 router.get("/", listContacts);
 
-router.get("/:id", getById);
+router.get("/:id", isValidId, getById);
 
 router.post("/", jsonParser, addContact);
 
-router.delete("/:id", removeContact);
+router.delete("/:id", isValidId, removeContact);
 
-router.put("/:id", jsonParser, updateContact);
-router.patch("/:id/favorite", jsonParser, updateStatusContact);
+router.put("/:id", isValidId, jsonParser, updateContact);
+router.patch("/:id/favorite", isValidId, jsonParser, updateStatusContact);
 module.exports = router;
