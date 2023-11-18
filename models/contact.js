@@ -1,4 +1,5 @@
 const { model, default: mongoose } = require("mongoose");
+
 const ContactSchema = new mongoose.Schema({
   name: {
     type: String,

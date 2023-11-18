@@ -1,7 +1,7 @@
 // const fs = require("fs/promises");
 const path = require("path");
 const Contact = require("../models/contact");
-const { ContactSchema, favoriteSchema } = require("../joi_schemas/joi_schemas");
+const { contactSchema, favoriteSchema } = require("../joi_schemas/joi_schemas");
 // const { nanoid } = require("nanoid");
 // Розкоментуй і запиши значення
 const contactsPath = path.join(__dirname, "contacts.json");
@@ -65,8 +65,7 @@ async function removeContact(req, res, next) {
 async function addContact(req, res, next) {
   try {
     const { name, email, phone } = req.body;
-
-    const validation = ContactSchema.validate(req.body, { abortEarly: false });
+    const validation = contactSchema.validate(req.body);
 
     if (validation.error) {
       const errorMessage = validation.error.details
@@ -97,7 +96,7 @@ const updateContact = async (req, res, next) => {
     const { id } = req.params;
     const { name, email, phone } = req.body;
 
-    const validation = ContactSchema.validate(req.body, { abortEarly: false });
+    const validation = contactSchema.validate(req.body, { abortEarly: false });
 
     if (validation.error) {
       const errorMessage = validation.error.details
