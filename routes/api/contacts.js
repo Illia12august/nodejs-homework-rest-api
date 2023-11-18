@@ -13,7 +13,7 @@ const router = express.Router();
 const jsonParser = express.json();
 router.get("/", listContacts);
 
-router.get("/:id", isValidId, getById);
+router.get("/:id", getById);
 
 router.post("/", jsonParser, addContact);
 
