@@ -1,5 +1,4 @@
 const Joi = require("joi");
-
 const contactSchema = Joi.object({
   name: Joi.string()
     .regex(/^[A-Za-z]+\s[A-Za-z]+$/)

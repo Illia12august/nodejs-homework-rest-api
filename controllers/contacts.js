@@ -1,12 +1,11 @@
 // const fs = require("fs/promises");
-const path = require("path");
 const Contact = require("../models/contact");
 const { contactSchema, favoriteSchema } = require("../joi_schemas/joi_schemas");
+
 // const { nanoid } = require("nanoid");
 // Розкоментуй і запиши значення
-const contactsPath = path.join(__dirname, "contacts.json");
-console.log(contactsPath);
 // TODO: задокументувати кожну функцію
+
 async function listContacts(req, res, next) {
   try {
     const contacts = await Contact.find().exec();
@@ -162,6 +161,7 @@ async function updateStatusContact(req, res, next) {
     next(error);
   }
 }
+
 module.exports = {
   listContacts,
   getById,

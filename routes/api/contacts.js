@@ -7,7 +7,7 @@ const {
   updateContact,
   updateStatusContact,
 } = require("../../controllers/contacts");
-const isValidId = require("../../models/isValidId");
+const isValidId = require("../../helpers/isValidId");
 
 const router = express.Router();
 const jsonParser = express.json();
