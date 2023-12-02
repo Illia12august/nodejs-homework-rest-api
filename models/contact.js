@@ -1,4 +1,4 @@
-const { model, default: mongoose } = require("mongoose");
+const { model, default: mongoose, Schema } = require("mongoose");
 
 const ContactSchema = new mongoose.Schema({
   name: {
@@ -14,6 +14,11 @@ const ContactSchema = new mongoose.Schema({
   favorite: {
     type: Boolean,
     default: false,
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "user",
+    required: true,
   },
 });
 const Contact = model("contact", ContactSchema);

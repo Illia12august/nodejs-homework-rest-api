@@ -6,6 +6,7 @@ const { User } = require("../models/user");
 const { HttpError, ctrlWrapper } = require("../helpers");
 
 const SECRET_KEY = process.env.SECRET_KEY;
+
 const register = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -40,13 +41,50 @@ const login = async (req, res) => {
   };
 
   const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "23h" });
-  console.log(token);
+  await User.findByIdAndUpdate(user._id, { token });
+
   res.json({
     token,
   });
 };
 
+const getCurrent = async (req, res) => {
+  const { email, name } = req.user;
+
+  res.json({
+    email,
+    name,
+  });
+};
+
+const logout = async (req, res) => {
+  const { _id } = req.user;
+  await User.findByIdAndUpdate(_id, { token: "" });
+
+  res.json({
+    message: "Logout success",
+  });
+};
+async function updateSubscription(req, res, next) {
+  const { _id: user } = req.user;
+
+  const userSubscription = await User.findByIdAndUpdate(user, req.body, {
+    new: true,
+  });
+
+  if (!userSubscription) return next();
+
+  const { email, subscription } = userSubscription;
+
+  res.status(200).json({
+    email,
+    subscription,
+  });
+}
 module.exports = {
+  updateSubscription: ctrlWrapper(updateSubscription),
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
+  getCurrent: ctrlWrapper(getCurrent),
+  logout: ctrlWrapper(logout),
 };

@@ -1,32 +1,48 @@
 // const fs = require("fs/promises");
 const Contact = require("../models/contact");
 const { contactSchema, favoriteSchema } = require("../joi_schemas/joi_schemas");
+const { HttpError } = require("../helpers");
 
 // const { nanoid } = require("nanoid");
 // Розкоментуй і запиши значення
 // TODO: задокументувати кожну функцію
 
-async function listContacts(req, res, next) {
-  try {
-    const contacts = await Contact.find().exec();
-    res.send(contacts);
-  } catch (error) {
-    next(error);
+async function listContacts(req, res) {
+  const { _id: owner } = req.user;
+
+  const { page = 1, limit = 10, favorite } = req.query;
+  const skip = (page - 1) * limit;
+
+  const query = { owner };
+
+  if (favorite === "true") {
+    query.favorite = true;
   }
+
+  const data = await Contact.find(query, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).populate("owner", "email");
+
+  res.json(data);
 }
 
 async function getById(req, res, next) {
   const { id } = req.params;
+  const { _id } = req.user;
 
-  try {
-    const contact = await Contact.findById(id).exec();
-    if (contact === null) {
-      return res.status(404).json({ message: "Contact not found" });
-    }
-    res.send(contact);
-  } catch (error) {
-    next(error);
+  const contact = await Contact.findById(id);
+
+  if (!contact) {
+    return next(HttpError(404, "Contact not found"));
   }
+
+  const verifiedContact =
+    contact.owner.toString() === _id.toString()
+      ? contact
+      : next(HttpError(404, "Contact not found"));
+
+  res.json(verifiedContact);
   // ...твій код. Повертає об'єкт контакту з таким id. Повертає null, якщо контакт з таким id не знайдений.
 }
 
@@ -62,8 +78,8 @@ async function removeContact(req, res, next) {
 }
 
 async function addContact(req, res, next) {
+  const { _id: owner } = req.user;
   try {
-    const { name, email, phone } = req.body;
     const validation = contactSchema.validate(req.body);
 
     if (validation.error) {
@@ -76,9 +92,8 @@ async function addContact(req, res, next) {
     }
 
     const newContact = new Contact({
-      name,
-      email,
-      phone,
+      ...req.body,
+      owner,
     });
 
     const savedContact = await newContact.save();
