@@ -7,12 +7,15 @@ const {
   getCurrent,
   updateSubscription,
   updateAvatar,
+  verify,
+  resendVerifyEmail,
 } = require("../../controllers/auth");
 
 const { validateBody } = require("../../middlewares");
 const upload = require("../../middlewares/upload");
 const authenticate = require("../../middlewares/authenticate");
 const { schemas } = require("../../models/user");
+const { emailSchema } = require("../../joi_schemas/joi_schemas");
 
 const router = express.Router();
 
@@ -32,4 +35,6 @@ router.patch(
   updateSubscription
 );
 router.patch("/avatars", authenticate, upload.single("avatar"), updateAvatar);
+router.get("/verify/:token", verify);
+router.post("/verify", validateBody(emailSchema), resendVerifyEmail);
 module.exports = router;
