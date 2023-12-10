@@ -13,7 +13,7 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      match: emailRegexp,
+      match: [emailRegexp, "Invalid email format provided"],
       unique: true,
       required: true,
     },
@@ -34,6 +34,14 @@ const userSchema = new Schema(
     avatarURL: {
       type: String,
       required: true,
+    },
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    verifyToken: {
+      type: String,
+      default: null,
     },
   },
   { versionKey: false, timestamps: true }

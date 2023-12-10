@@ -27,8 +27,13 @@ const favoriteSchema = Joi.object({
     "any.required": "Missing field favorite",
   }),
 });
-
+const emailSchema = Joi.object({
+  email: Joi.string()
+    .regex(/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/)
+    .required(),
+});
 module.exports = {
   contactSchema,
   favoriteSchema,
+  emailSchema,
 };
